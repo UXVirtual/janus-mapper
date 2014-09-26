@@ -15,3 +15,6 @@ Route::get('/', function()
 {
 	return View::make('hello');
 });
+
+//TODO: remove this route for production as we only want crawler to run from commandline for better performance
+Route::get('/crawler', 'CrawlerController@crawl');
