@@ -1,7 +1,7 @@
 JanusVR Mapper
 ==============
 
-A headless client for the JanusVR server that scrapes anonymous aggregated usage data for use in a mapping program.
+A headless client for the JanusVR server that scrapes a list of URLs from a given JanusVR compatible room and follows them a specfic number of levels deep to construct a map. User data is requested from the JanusVR server at regular intervals so it can show the population of each room. This data is then cached for a specific length of time and processed into a JanusVR compatible "Map Room" which users can access to see who's online.
 
 It uses the [Laravel](http://laravel.com/) 4 PHP framework and is designed to run on a Linux server running Apache.
 
