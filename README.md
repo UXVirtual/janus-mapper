@@ -17,20 +17,23 @@ Dependencies
 Installation
 ------------
 
-1) The following command from the root of the repository: `php composer.phar install`. This will install any required
+1) `cd` to the root of the repository and follow the instructions at
+[https://getcomposer.org/download/](https://getcomposer.org/download/) to install Composer.
+
+2) The following command from the root of the repository: `php composer.phar install`. This will install any required
 composer packages into the `vendor` folder. Note that you will need the `php` binary correctly set in your PATH for this
 to work.
 
-2) Run `php composer.phar update` to update any packages.
+3) Run `php composer.phar update` to update any packages.
 
-3) If developing locally you may want to set up a new folder with custom config for your environment in the `app/config`
+4) If developing locally you may want to set up a new folder with custom config for your environment in the `app/config`
 folder. Alternately, adjust the config in the `app/config/local` folder.
 
-4) You will need to edit `app/bootstrap/start.php` and set the `local` environment to match your development machine's
+5) You will need to edit `app/bootstrap/start.php` and set the `local` environment to match your development machine's
 hostname. Add other environment -> hostname mappings here as needed. You can find your hostname by opening up a terminal
 and running `hostname`.
 
-5) You can also override only parts of the global config by specifying the keys you wish to override in a php file of
+6) You can also override only parts of the global config by specifying the keys you wish to override in a php file of
 the same name inside the `local` folder. I.e. you can add `debug => true` to a returned array in
 `app/config/local/app.php` to turn on debug mode for your local development server.
 
