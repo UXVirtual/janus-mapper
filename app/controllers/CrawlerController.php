@@ -2,6 +2,7 @@
 
 use Goutte\Client;
 use Symfony\Component\DomCrawler\Crawler;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class CrawlerController
@@ -9,6 +10,10 @@ use Symfony\Component\DomCrawler\Crawler;
  * @author Michael Andrew (michael@uxvirtual.com
  */
 class CrawlerController extends BaseController {
+
+    var $client;
+    var $pages = array();
+    var $linksToCrawl = array();
 
     /**
      * Crawl
@@ -18,34 +23,21 @@ class CrawlerController extends BaseController {
      */
     public function crawl()
     {
+        $this->output('<pre>');
+
         $this->output('Running crawl...');
 
-        $client = new Client();
-        $client->request('GET', Config::get('crawler.start_url').'/');
-        $content = $client->getResponse()->getContent();
+        $pages[Config::get('crawler.start_url').'/']['parent'] = null;
 
-        //replace all HTML comments in content to work around issue where some sites comment out VR specific code
-        $content = preg_replace('/(<!--|-->)/m', '', $content);
-
-        $crawler2 = new Crawler(null, Config::get('crawler.start_url').'/');
-        $crawler2->addContent($content);
-
-        echo '<pre>';
-
-        $links = array();
-
-        $crawler2->filter('Link')->each(function ($node) {
-
-            $url = $node->extract(array('url'));
-
-            if($url != ''){
-                $url = $url[0];
-                $links[] = $url;
-                $this->output($url);
-            }
-        });
+        $this->crawlPage(Config::get('crawler.start_url').'/');
 
         $this->output('Crawl successful.'."\n");
+
+        $this->output('Outputting results...'."\n");
+
+        $this->output(print_r($this->pages,TRUE));
+
+        $this->output('Finished.'."\n");
 
     }
 
@@ -53,5 +45,98 @@ class CrawlerController extends BaseController {
         echo "\n";
         echo $message."\n";
     }
+
+    private function crawlPage($url){
+        $this->output('Scraping links from URL: '.$url);
+        $result = $this->scrapeLinks($url);
+
+        if(!isset($result['error'])){
+            $pageUrls = $result;
+        }else{
+            $this->pages[$url]['scrape_error'] = 'Something went wrong while trying to scrape this page.';
+            return;
+        }
+
+        $this->output('Got links: '.print_r($pageUrls,TRUE));
+
+        if($this->getNumberParents($url) < Config::get('crawler.depth')+1){
+            $this->linksToCrawl = array_merge($this->linksToCrawl,$pageUrls);
+
+            while(count($this->linksToCrawl) > 0){
+                $pageURL = array_pop($this->linksToCrawl);
+                if(!isset($this->pages[$pageURL])){
+                    $this->crawlPage($pageURL);
+                }
+            }
+        }
+    }
+
+    private function scrapeLinks($url){
+        $this->client = new Client();
+
+        try{
+            $this->client->request('GET', $url);
+        }catch(RequestException $e){
+            return array('error' => $e->getMessage());
+        }
+
+
+        $content = $this->client->getResponse()->getContent();
+
+        //replace all HTML comments in content to work around issue where some sites comment out VR specific code
+        $content = preg_replace('/(<!--|-->)/m', '', $content);
+
+        $crawler = new Crawler(null, $url);
+        $crawler->addContent($content);
+
+
+
+        $pageLinks = array();
+
+        $pageLinks = $crawler->filter('Link')->each(function ($node) {
+
+            $linkURL = $node->extract(array('url'));
+
+            if(!empty($linkURL)){
+                $linkURL = $linkURL[0];
+                if(!empty($linkURL)){
+                    return $linkURL;
+                    //$this->output($url);
+                }
+
+            }
+        });
+
+        for($i = 0; $i < count($pageLinks); $i++){
+            $pageLinks[$i] = URLTools::url_to_absolute($url, $pageLinks[$i]);
+        }
+
+        if(!isset($pages[$url])){
+            $this->pages[$url] = array();
+        }
+
+        $this->pages[$url]['md5_hash'] = md5($url);
+        $this->pages[$url]['links'] = $pageLinks;
+        $this->pages[$url]['parent'] = $url;
+
+        return $pageLinks;
+    }
+
+    private function getNumberParents($url){
+        $parentCount = 0;
+
+        while($parentCount < Config::get('crawler.depth')+1 ){
+
+            $parentURL = $this->pages[$url]['parent'];
+
+            if($parentURL == null){
+                return $parentCount;
+            }else{
+                $parentCount++;
+            }
+
+        }
+    }
+
 
 }
