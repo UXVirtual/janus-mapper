@@ -119,6 +119,12 @@ class CrawlerController extends BaseController {
         $this->pages[$url]['links'] = $pageLinks;
         $this->pages[$url]['parent'] = $url;
 
+
+        //TODO: split keywords into primary and secondary, storing common keywords in secondary so primary results aren't diluted
+        $this->pages[$url]['keywords'] = explode(', ',seo::keywords($content,25));
+
+        $this->output('Keywords: '.print_r($this->pages[$url]['keywords'],TRUE));
+
         return $pageLinks;
     }
 

@@ -5,8 +5,15 @@
 	"license": "MIT",
 	"require": {
 		"laravel/framework": "4.2.*",
-		"fabpot/goutte": "~2.0"
+		"fabpot/goutte": "~2.0",
+        "phpclasses/php-seo": ">=0.4"
 	},
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://www.phpclasses.org/"
+        }
+    ],
 	"autoload": {
 		"classmap": [
 			"app/commands",
