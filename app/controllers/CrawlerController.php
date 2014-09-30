@@ -99,13 +99,34 @@ class CrawlerController extends BaseController {
 
             if(!empty($linkURL)){
                 $linkURL = $linkURL[0];
-                if(!empty($linkURL)){
+                if(!empty($linkURL) && preg_match('/\....$/',$linkURL) !== 1 && preg_match('/imgur.com/',$linkURL) !== 1 && preg_match('/gfycat.com/',$linkURL) !== 1){
                     return $linkURL;
                     //$this->output($url);
                 }
 
             }
         });
+
+        /*$pageTextArray = $crawler->filter('Text')->each(function ($node) {
+            return $node->text();
+        });
+
+        $pageParagraphArray = $crawler->filter('Text')->each(function ($node) {
+            return $node->text();
+        });
+
+
+        $secondaryContent = '';
+
+        foreach($pageParagraphArray AS $paragraph){
+            $secondaryContent .= ' '.$paragraph;
+        }
+
+        foreach($pageTextArray AS $text){
+            $secondaryContent .= ' '.$text;
+        }*/
+
+
 
         for($i = 0; $i < count($pageLinks); $i++){
             $pageLinks[$i] = URLTools::url_to_absolute($url, $pageLinks[$i]);
@@ -121,9 +142,18 @@ class CrawlerController extends BaseController {
 
 
         //TODO: split keywords into primary and secondary, storing common keywords in secondary so primary results aren't diluted
-        $this->pages[$url]['keywords'] = explode(', ',seo::keywords($content,25));
+
+        $this->pages[$url]['keywords'] = explode(', ',JanusSEO::keywords($content,25));
+
+        //echo 'Banned words: '.print_r(JanusSEO::$banned_words,TRUE);
+
+        //exit();
+
+        //$this->pages[$url]['primary_keywords'] = explode(', ',seo::keywords($secondaryContent,25));
 
         $this->output('Keywords: '.print_r($this->pages[$url]['keywords'],TRUE));
+
+        //$this->output('Secondary Keywords: '.print_r($this->pages[$url]['secondary_keywords'],TRUE));
 
         return $pageLinks;
     }
