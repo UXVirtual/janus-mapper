@@ -86,8 +86,10 @@ class CrawlerController extends BaseController {
         //replace all HTML comments in content to work around issue where some sites comment out VR specific code
         $content = preg_replace('/(<!--|-->)/m', '', $content);
 
+
+
         $crawler = new Crawler(null, $url);
-        $crawler->addContent($content);
+        $crawler->addHTMLContent($content);
 
 
 
@@ -141,9 +143,28 @@ class CrawlerController extends BaseController {
         $this->pages[$url]['parent'] = $url;
 
 
-        //TODO: split keywords into primary and secondary, storing common keywords in secondary so primary results aren't diluted
+        //TODO: extract just the contents of <FireBoxRoom> and run the keyword search against it
 
-        $this->pages[$url]['keywords'] = explode(', ',JanusSEO::keywords($content,25));
+        $fireBoxRoom = $crawler->filter('FireBoxRoom,Title');
+
+        //$this->output('FireBoxRoom: '.var_dump($fireBoxRoom),TRUE);
+
+        $fireBoxRoomContent = '';
+        if(count($fireBoxRoom) === 1){
+            $fireBoxRoomContent .= $fireBoxRoom->html();
+        }
+
+        $metaDataArray = $crawler->filter('meta[name=description],meta[name=keywords]')->each(function ($node) {
+            return $node->extract(array('content'));
+        });
+
+        foreach($metaDataArray AS $metaData){
+            if(!empty($metaData)){
+                $fireBoxRoomContent .= ' '.$metaData[0];
+            }
+        }
+
+        $this->pages[$url]['keywords'] = explode(', ',JanusSEO::keywords($fireBoxRoomContent,25));
 
         //echo 'Banned words: '.print_r(JanusSEO::$banned_words,TRUE);
 
